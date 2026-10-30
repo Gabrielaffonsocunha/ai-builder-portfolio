@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Protótipo de IA para sugerir a triagem de chamados de suporte.">
+  <title>Triagem Inteligente de Chamados</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1120;--panel:#121b2d;--line:#27344b;--text:#edf3ff;--muted:#a9b7ce;--accent:#70d6c0}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top right,#18314a,var(--bg) 48%);color:var(--text);font:16px/1.5 system-ui,sans-serif}
+    main{max-width:920px;margin:0 auto;padding:48px 20px}header{margin-bottom:28px}.tag{color:var(--accent);font-size:.78rem;text-transform:uppercase;letter-spacing:.14em;font-weight:700}
+    h1{font-size:clamp(2rem,5vw,3.25rem);line-height:1.05;margin:.6rem 0}p{color:var(--muted)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    section{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}label{display:block;margin:14px 0 6px;font-weight:650}
+    input,textarea{width:100%;border:1px solid var(--line);border-radius:9px;background:#0b1322;color:var(--text);padding:12px;font:inherit}
+    textarea{min-height:190px;resize:vertical}button{margin-top:16px;border:0;border-radius:9px;background:var(--accent);color:#08201d;padding:12px 17px;font:inherit;font-weight:750;cursor:pointer}
+    button:disabled{opacity:.55;cursor:wait}.notice{font-size:.88rem;border-left:3px solid #e8b769;padding-left:12px}.result{min-height:250px}
+    .chip{display:inline-block;background:#203c50;border-radius:999px;padding:4px 10px;margin:4px 7px 4px 0;font-size:.85rem}
+    pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;color:var(--text)}.error{color:#ff9a9a}
+    @media(max-width:720px){.grid{grid-template-columns:1fr}main{padding-top:30px}}
+  </style>
+</head>
+<body>
+<main>
+  <header><div class="tag">AI Builder · suporte</div><h1>Triagem Inteligente de Chamados</h1>
+    <p>Uma IA organiza o chamado e prepara uma resposta inicial para revisão da equipe.</p></header>
+  <div class="grid">
+    <section>
+      <h2>Descreva a solicitação</h2>
+      <form id="form">
+        <label for="title">Título</label><input id="title" required minlength="3" maxlength="180" value="Não consigo acessar o e-mail">
+        <label for="description">Descrição</label><textarea id="description" required minlength="10" maxlength="6000">Desde esta manhã, o Outlook pede a senha repetidamente. A internet funciona e já reiniciei o computador.</textarea>
+        <button id="submit" type="submit">Analisar com IA</button>
+      </form>
+      <p class="notice">Use dados fictícios. A resposta é uma sugestão e deve ser revisada antes de qualquer ação.</p>
+    </section>
+    <section class="result"><h2>Sugestão</h2><div id="output" aria-live="polite"><p>Preencha o formulário e selecione “Analisar com IA”.</p></div></section>
+  </div>
+</main>
+<script>
+const form=document.querySelector("#form"), output=document.querySelector("#output"), button=document.querySelector("#submit");
+form.addEventListener("submit",async event=>{
+  event.preventDefault(); button.disabled=true; button.textContent="Analisando…"; output.replaceChildren();
+  try{
+    const response=await fetch("/api/triage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:document.querySelector("#title").value,description:document.querySelector("#description").value})});
+    const data=await response.json(); if(!response.ok) throw new Error(data.detail||"Falha ao analisar o chamado.");
+    const chips=document.createElement("div");
+    for(const value of [data.category,data.priority]){const chip=document.createElement("span");chip.className="chip";chip.textContent=value;chips.append(chip);}
+    output.append(chips);
+    for(const [title,value] of [["Resumo",data.summary],["Por que essa prioridade?",data.rationale],["Resposta inicial sugerida",data.suggested_reply],["Informações que faltam",(data.information_needed||[]).join("\n")||"Nenhuma identificada"]]){
+      const heading=document.createElement("h3");heading.textContent=title;const text=document.createElement("p");text.textContent=value;output.append(heading,text);
+    }
+  }catch(error){const message=document.createElement("p");message.className="error";message.textContent=error.message;output.append(message);}
+  finally{button.disabled=false;button.textContent="Analisar com IA";}
+});
+</script>
+</body>
+</html>
