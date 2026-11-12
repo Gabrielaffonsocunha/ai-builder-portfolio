@@ -2,6 +2,12 @@
 
 Dois protótipos de IA aplicada a tarefas reais de negócio. Cada projeto tem uma interface web, uma API Python e uma integração configurável com um modelo de linguagem.
 
+## Prévia visual
+
+> Mockup ilustrativo com dados fictícios. Esta imagem não é uma captura de uma execução real da aplicação. Consulte a seção de execução para iniciar a API.
+
+![Prévia ilustrativa de uma interface para triagem com IA](docs/assets/ai-triage-demo.svg)
+
 ## Projetos
 
 | Projeto | Problema atendido | O que a IA faz |
